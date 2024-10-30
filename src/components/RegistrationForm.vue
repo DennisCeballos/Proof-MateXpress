@@ -100,6 +100,8 @@
   import store from '@/store'
   import Auth from '@/services/Auth'
   import { LockClosedIcon } from '@heroicons/vue/20/solid'
+  import { db } from "@/firebase/firebaseConfig"
+  import { collection, addDoc } from "firebase/firestore"; 
 
   const attempt = computed( () => store.getters['system/getAttempt'] )
 
@@ -112,7 +114,7 @@
 
   const errors = ref( [] )
 
-  const register = () => {
+  const register = async () => {
 
       errors.value = []
 
@@ -129,7 +131,16 @@
           errors.value.push( 'Password and Password confirmation do NOT match' )
       }
 
-      Auth.register( formData.value )
+      // Auth.register( formData.value )
+      try {
+        await addDoc(collection(db, "Users"), {
+          username: formData.value.name,
+          password: formData.value.password
+        });
+        console.log("Agregado usuario a la database")
+      } catch (error) {
+        console.error("Error agregando usuario: ", error)
+      }
 
       store.commit( {
         type: 'system/SET_ATTEMPT',

@@ -112,7 +112,7 @@
 
   const errors = ref( [] )
 
-  const login = () => {
+  const login = async () => {
 
     errors.value = []
 
@@ -126,7 +126,7 @@
       attempt: true
     } )
 
-    Auth.login( formData.value )
+     Auth.login( formData.value )
 
   }
 
