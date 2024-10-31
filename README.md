@@ -7,6 +7,7 @@ Prueba de concepto para una aplicacion web que ayudará a profesores a preparar 
 Preguntar en el grupo por el .env del firebase y ejecutar
 
 > npm install
+
 > npm install firebase
 
 Para ejecutar:
