@@ -5,6 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_apiKey,
     authDomain: import.meta.env.VITE_FIREBASE_authDomain,
+    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
     projectId: import.meta.env.VITE_FIREBASE_projectId,
     storageBucket: import.meta.env.VITE_FIREBASE_storageBucket,
     messagingSenderId: import.meta.env.VITE_FIREBASE_messagingSenderId,

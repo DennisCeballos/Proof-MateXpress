@@ -129,7 +129,8 @@
   const navigation = [
     { name: 'Home', label: 'Home' },
     { name: 'About', label: 'About' },
-    { name: 'Calculadora', label: 'Calculadora'}
+    { name: 'Calculadora', label: 'Calculadora'},
+    { name: 'Form', label: 'Form'}
   ]
 
   const userNavigation = [
