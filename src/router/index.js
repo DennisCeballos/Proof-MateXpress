@@ -106,9 +106,10 @@ const routes = [
         component: () => import( '@/views/Calculadora.vue' ),
       },
       {
-        path: '/exampleform',  
-        name: 'Form',
-        component: () => import( '@/views/ExampleForm.vue' ),  // temporal
+        path: '/exam/:examId',
+        name: 'ExamForm',
+        component: () => import('@/views/ExampleForm.vue'), 
+        props: true, 
       },
       { 
         path: '/:pathMatch(.*)*',

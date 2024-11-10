@@ -1,6 +1,6 @@
 // import firebase from 'firebase/compat/app';
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, getDocs} from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_apiKey,
@@ -16,4 +16,4 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-export { app, db };
+export { app, db, getDoc, doc, collection, getDocs };
