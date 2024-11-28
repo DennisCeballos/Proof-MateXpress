@@ -71,7 +71,13 @@ const routes = [
         name: 'Dashboard',
         component: () =>
           import( '@/views/Dashboard.vue' ),
-      }      
+      },
+      {
+        path: '/gen-exams',
+        name: 'Examenes',
+        component: () => 
+          import( '@/views/GenExams.vue' ),
+      },      
     ]
   },
 
@@ -106,9 +112,9 @@ const routes = [
         component: () => import( '@/views/Calculadora.vue' ),
       },
       {
-        path: '/exams',
-        name: 'Exámenes',
-        component: () => import( '@/views/ListaExams.vue' ),
+        path: '/gen-balotario',
+        name: 'Balotario',
+        component: () => import( '@/views/GenBalotario.vue' ),
       },
       {
         path: '/exam/:examId',

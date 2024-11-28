@@ -130,14 +130,14 @@
     { name: 'Home', label: 'Home' },
     { name: 'About', label: 'About' },
     { name: 'Calculadora', label: 'Calculadora'},
-    { name: 'Exámenes', label: 'Exámenes'},
+    { name: 'Examenes', label: 'Examenes'},
   ]
 
   const userNavigation = [
     { name: 'Dashboard', label: 'Dashboard', reqAuth: true },
     { name: 'Logout', label: 'Logout', reqAuth: true },
     { name: 'Register', label: 'Register', reqGuest: true },
-    { name: 'Login', label: 'Login', reqGuest: true },
+    { name: 'gen-exams', label: 'Examenes', reqGuest: true },
   ]
 
   const uN = ref( [] )

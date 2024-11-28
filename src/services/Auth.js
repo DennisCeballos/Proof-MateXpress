@@ -167,49 +167,48 @@ const Auth = {
 
     },
     login( payload ) {
-
-        if( store.getters['user/getToken'] ) return
-
+        
         const { email, password, remember } = payload
 
-        API.post( '/login', {
-            email,
-            password,
-            remember,
-        } ).then( res => {
+        // Simple validation for email and password
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-            if( res?.status === 200 ) {
-
-                store.commit( {
-                    type: 'user/SET_USER',
-                    token: res.data.token,
-                    user: res.data.user,
-                } )
-
-                store.commit( {
-                    type: 'notify/SET_MESSAGES',
-                    message: 'Login is successful!',
-                } )
-
-                store.commit( {
-                    type: 'system/SET_ATTEMPT',
-                    attempt: false
-                } )
-
-                if( emailVerification() ) {
-
-                    router.push( {name: 'Dashboard'} )
-
-                } else {
-
-                    router.push( {name: 'VerifyEmail'} )
-
-                }                
-
-            }
-
-        } )
+        if (!emailPattern.test(email)){
+            store.commit({
+                type: 'notify/SET_MESSAGES',
+                message: 'Invalid email format.',
+            });
+            return;
+        }
         
+        if (!password) {
+            store.commit({
+                type: 'notify/SET_MESSAGES',
+                message: 'Password cannot be empty.',
+            });
+            return;
+        }
+
+        // Simulate successful login (bypassing API)
+        store.commit({
+            type: 'user/SET_USER',
+            token: 'dummy-token', // Assign a dummy token
+            user: { email }, // Set user object with the provided email
+        });
+
+        store.commit({
+            type: 'notify/SET_MESSAGES',
+            message: 'Login is successful!',
+        });
+
+        store.commit({
+            type: 'system/SET_ATTEMPT',
+            attempt: false,
+        });
+
+        // Redirect to Dashboard (or any other page)
+        router.push({ name: 'Examenes' });
+
     },
     logout() {
 

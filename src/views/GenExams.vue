@@ -1,6 +1,6 @@
 <template>
     <div class="max-w-4xl mx-auto p-6">
-      <h1 class="text-2xl font-bold mb-6">Lista de Exámenes</h1>
+      <h1 class="text-2xl font-bold mb-6">Genera examenes</h1>
   
       <!-- Mensaje mientras se obtienen los exámenes -->
       <p v-if="loading" class="text-center text-gray-500">Obteniendo exámenes...</p>
