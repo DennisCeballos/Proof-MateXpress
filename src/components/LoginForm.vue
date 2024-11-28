@@ -3,7 +3,7 @@
     <div class="w-full max-w-md space-y-8">
       <div>
         <img class="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company" />
-        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Sign in to your account</h2>
+        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">¡Hola! Inicie sesión</h2>
         <p class="mt-2 text-center text-sm text-gray-600">
           Or
           {{ ' ' }}
@@ -11,14 +11,14 @@
             :to="{name:'Register'}"
             class="font-medium text-indigo-600 hover:text-indigo-500"
           >
-            Register for an account
+            Registrar una cuenta
           </router-link>
         </p>
       </div>
       <form class="mt-8 space-y-6" @submit.prevent="login">
         <div class="-space-y-px rounded-md shadow-sm">
           <div>
-            <label for="email-address" class="sr-only">Email address</label>
+            <label for="email-address" class="sr-only">Correo electrónico</label>
             <input
               id="email-address"
               type="email"
@@ -31,7 +31,7 @@
             />
           </div>
           <div>
-            <label for="password" class="sr-only">Password</label>
+            <label for="password" class="sr-only">Contraseña</label>
             <input
               id="password"
               type="password"
@@ -53,7 +53,7 @@
               type="checkbox"
               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
             />
-            <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
+            <label for="remember" class="ml-2 block text-sm text-gray-900">Recuérdame</label>
           </div>
 
           <div class="text-sm">
@@ -62,7 +62,7 @@
               :to="{name: 'ForgotPassword'}"
               class="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Forgot your password?
+              ¿Olvidaste tu contraseña?
             </router-link>
 
           </div>
@@ -75,7 +75,7 @@
             type="submit"
             class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
-            Sign in
+            Iniciar sesión
           </button>
 
           <button
@@ -87,7 +87,7 @@
             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
               <LockClosedIcon class="h-5 w-5 text-indigo-400" aria-hidden="true" />
             </span>
-            Sign in
+            Iniciar sesión
           </button>
 
         </div>
