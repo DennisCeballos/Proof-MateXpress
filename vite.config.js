@@ -6,8 +6,11 @@ const path = require('path')
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve( __dirname, './src' )
+      '@': path.resolve(__dirname, './src')
     }
   },
-  plugins: [vue()]
+  plugins: [vue()],
+  build: {
+    target: 'esnext'  // Set target to 'esnext' or 'es2020' to support BigInt
+  }
 })
