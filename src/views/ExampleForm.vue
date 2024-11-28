@@ -51,10 +51,29 @@
 
     <!-- Botón de enviar -->
     <button
+      @click="backPage"
+      class="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring"
+    >
+      Atrás
+    </button>
+
+    -
+
+    <!-- Botón de enviar -->
+    <button
       @click="submitForm"
       class="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring"
     >
       Enviar
+    </button>
+
+    -
+
+    <button
+      @click="regenarateForm"
+      class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring"
+    >
+      Regenerar examen
     </button>
 
     <!-- Mensaje -->
@@ -65,12 +84,17 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { db, doc, getDoc, collection, getDocs } from '../firebase/firebaseConfig';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 // Variables para almacenar el examen y las preguntas
 const questions = ref([]);
 const responses = ref({});
 const message = ref('');
+
+const router = useRouter();
+
+const min = -25;
+const max = 100;
 
 // Función para manejar el envío del formulario
 const submitForm = async () => {
@@ -82,6 +106,71 @@ const submitForm = async () => {
     message.value = 'Hubo un error al enviar el formulario.';
   }
 };
+
+const backPage = () => {
+  router.push(`/exams`)
+};
+
+const regenarateForm = async () => {
+  try {
+    questions.value = questions.value.map((question) => {
+      const randomizedQuestion = {
+        ...question,
+        question: randomizeNumbers(question.question),
+      };
+
+      if (randomizedQuestion.latex) {
+        randomizedQuestion.latex = randomizeNumbers(randomizedQuestion.latex);
+      }
+
+      if (question.type === 'multipleChoice' && question.options) {
+        randomizedQuestion.options = question.options.map(randomizeNumbers);
+      }
+
+      return randomizedQuestion;
+    });
+    responses.value = {};
+    message.value = 'Examen regenerado correctamente.';
+    //console.log('Preguntas regeneradas:', questions.value);
+  } catch (error) {
+    console.error('Error al regenerar el examen:', error);
+    message.value = 'Hubo un error al regenerar el examen.';
+  }
+};
+
+const regenerateForm = async () => {
+  try {
+    questions.value = questions.value.map((question) => {
+      // Modificar las matrices o las opciones, si existen
+      if (question.type === 'multipleChoice' && question.options) {
+        question.options = question.options.map(() => generateRandomNumber(min, max));
+      }
+
+      if (question.latex) {
+        question.latex = replaceMatrixWithRandomNumbers(question.latex);
+      }
+
+      return question;
+    });
+
+    console.log('Examen regenerado:', questions.value);
+  } catch (error) {
+    console.error('Error al regenerar el examen:', error);
+  }
+};
+
+const generateRandomNumber = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+const randomizeNumbers = (text) => {
+  return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
+};
+
+const replaceMatrixWithRandomNumbers = (latex) => {
+  return latex.replace(/-?\d+/g, () => generateRandomNumber(min, max));
+};
+
 
 const isLatex = async (content) => {
   return content.includes("\\b");
@@ -95,7 +184,7 @@ const examId = route.params.examId;
 const fetchExamDetails = async () => {
   try {
     const examDoc = doc(db, 'exams', examId);
-    const examSnapshot = await getDoc(examDoc);
+    const examSnapshot = await getDoc(examDoc); // por si acaso
 
     // Cargar las preguntas desde la subcolección 'questions'
     const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
@@ -119,5 +208,6 @@ onMounted(() => {
 </script>
 
 <style>
-@import "katex/dist/katex.min.css"; /* Importa los estilos de KaTeX */
+@import "katex/dist/katex.min.css"; 
+
 </style>

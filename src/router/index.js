@@ -106,6 +106,11 @@ const routes = [
         component: () => import( '@/views/Calculadora.vue' ),
       },
       {
+        path: '/exams',
+        name: 'Exámenes',
+        component: () => import( '@/views/ListaExams.vue' ),
+      },
+      {
         path: '/exam/:examId',
         name: 'ExamForm',
         component: () => import('@/views/ExampleForm.vue'), 

@@ -5,7 +5,7 @@
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <img class="h-8 w-8" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500" alt="Your Company" />
+              <img class="h-8 w-8" src="https://media1.tenor.com/m/J7DNzJFsVEUAAAAd/oksunglasses.gif" alt="MAC" />
             </div>
             <div class="hidden md:block">
               <div class="ml-10 flex items-baseline space-x-4">
@@ -130,6 +130,7 @@
     { name: 'Home', label: 'Home' },
     { name: 'About', label: 'About' },
     { name: 'Calculadora', label: 'Calculadora'},
+    { name: 'Exámenes', label: 'Exámenes'},
   ]
 
   const userNavigation = [
