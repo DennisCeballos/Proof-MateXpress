@@ -1,47 +1,48 @@
 <template>
-  <div class="container mx-auto text-center py-10">
-    <!-- Title Section -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold">Tu ayuda para estudiar</h1>
-      <p class="text-lg mt-2 text-gray-600">y también para enseñar</p>
-    </div>
+  <div class="h-screen bg-white text-black flex items-center justify-center overflow-hidden">
+    <!-- Contenedor principal -->
+    <div class="flex flex-col lg:flex-row items-center lg:items-start lg:space-x-24 space-y-12 lg:space-y-0 px-4">
+      <!-- Sección del título -->
+      <div class="text-center lg:text-left">
+        <h1 class="text-purple-600 text-5xl sm:text-6xl lg:text-7xl font-extrabold">
+          MateXpress
+        </h1>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mt-4">
+          Tu ayuda para estudiar
+        </h1>
+        <p class="text-gray-600 mt-4 text-lg sm:text-xl lg:text-2xl">
+          y también para enseñar
+        </p>
+      </div>
 
-    <!-- Buttons Section -->
-    <div class="flex flex-col items-center space-y-4">
-      <!-- Study Button -->
-      <router-link
+      <!-- Sección de los botones -->
+      <div class="flex flex-col space-y-4 sm:space-y-6 items-center lg:items-start">
+        <router-link
         to="/gen-Balotario"
-        class="px-6 py-3 bg-purple-300 hover:bg-purple-400 rounded-lg shadow-md text-lg font-medium"
-      >
-        IR A ESTUDIAR
-      </router-link>
-
-      <!-- Teachers Button -->
-      <router-link
+          class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 sm:py-5 px-8 sm:px-10 rounded-xl text-lg sm:text-2xl shadow-lg"
+        >
+          IR A ESTUDIAR
+        </router-link>
+        <router-link
         to="/login"
-        class="px-4 py-2 bg-purple-300 hover:bg-purple-400 rounded-lg shadow-md text-lg font-medium"
-      >
-        Para profesores
-      </router-link>
-
-      <!-- Calculator Button -->
-      <router-link
+          class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 sm:py-5 px-8 sm:px-10 rounded-xl text-lg sm:text-2xl shadow-lg"
+        >
+          Para profesores
+        </router-link>
+        <router-link
         to="/calculator"
-        class="px-4 py-2 bg-purple-300 hover:bg-purple-400 rounded-lg shadow-md text-lg font-medium"
-      >
-        Calculadora Pro
-      </router-link>
+          class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 sm:py-5 px-8 sm:px-10 rounded-xl text-lg sm:text-2xl shadow-lg"
+        >
+          Calculadora Pro
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
-// No special logic needed here
-</script>
-
-<style scoped>
-.container {
-  max-width: 600px;
-  margin: auto;
+<style>
+body {
+  margin: 0;
+  overflow: hidden; 
 }
 </style>
