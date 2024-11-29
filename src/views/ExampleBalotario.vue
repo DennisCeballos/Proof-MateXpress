@@ -1,5 +1,11 @@
 <template>
     <div class="max-w-lg mx-auto p-6 border border-gray-300 rounded-lg bg-white">
+        <!-- Download PDF Button -->
+        <button @click="downloadPDF"
+            class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring">
+            Descargar como PDF
+        </button>
+
         <!-- Preguntas -->
         <div v-if="questions.length">
             <div v-for="question in questions" :key="question.id" class="mb-4">
@@ -66,6 +72,9 @@
 import { ref, onMounted } from 'vue';
 import { db, doc, getDoc, collection, getDocs } from '../firebase/firebaseConfig';
 import { useRoute, useRouter } from 'vue-router';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import katex from 'katex';
 
 // Variables para almacenar el examen y las preguntas
 const questions = ref([]);
@@ -76,6 +85,36 @@ const router = useRouter();
 
 const min = -25;
 const max = 100;
+
+const downloadPDF = () => {
+    window.print();
+};
+
+// Helper function to render LaTeX to image using KaTeX
+const renderLatexToImage = (latex) => {
+    return new Promise((resolve, reject) => {
+        // Create a temporary div to render the LaTeX expression
+        const element = document.createElement('div');
+        element.style.visibility = 'hidden'; // Hide it from the page
+        document.body.appendChild(element);
+
+        // Render LaTeX using KaTeX
+        katex.render(latex, element, {
+            throwOnError: false,
+            displayMode: true // Make it a block-level equation (centered)
+        });
+
+        // Convert the rendered LaTeX to an image using html2canvas
+        html2canvas(element).then((canvas) => {
+            document.body.removeChild(element); // Clean up after rendering
+
+            // Convert the canvas to a base64-encoded PNG image
+            const imageDataUrl = canvas.toDataURL('image/png');
+            resolve(imageDataUrl);
+        }).catch(reject);
+    });
+};
+
 
 // Función para manejar el envío del formulario
 const submitForm = async () => {
@@ -121,14 +160,14 @@ const regenarateForm = async () => {
 
 // Function to randomly select `n` questions from an array
 const getRandomQuestions = (questionsArray, n) => {
-  const selected = [];
-  const copiedArray = [...questionsArray];
+    const selected = [];
+    const copiedArray = [...questionsArray];
 
-  while (selected.length < n && copiedArray.length > 0) {
-    const randomIndex = Math.floor(Math.random() * copiedArray.length);
-    selected.push(copiedArray.at(randomIndex));
-  }
-  return selected;
+    while (selected.length < n && copiedArray.length > 0) {
+        const randomIndex = Math.floor(Math.random() * copiedArray.length);
+        selected.push(copiedArray.at(randomIndex));
+    }
+    return selected;
 };
 
 const generateRandomNumber = (min, max) => {
