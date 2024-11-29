@@ -36,27 +36,6 @@ const routes = [
     ]
   },
 
-  // Email verification
-  {
-    path: '/verify-email',
-    component: () => import( '@/components/DefaultLayout.vue' ),    
-    children: [
-      {
-        path: '/verify-email',
-        name: 'VerifyEmail',
-        meta: {
-          requiresAuth: true,
-        },
-        component: () => import( '@/views/VerifyEmail.vue' ),
-      },
-      {
-        path: '/verify-email-check',
-        name: 'VerifyEmailCheck',
-        component: () => import( '@/views/VerifyEmailCheck.vue' ),
-      }
-    ]
-  },
-
   // Dashboard area
   {
     path: '/dashboard',
@@ -71,7 +50,13 @@ const routes = [
         name: 'Dashboard',
         component: () =>
           import( '@/views/Dashboard.vue' ),
-      }      
+      },
+      {
+        path: '/gen-examenes',
+        name: 'Examenes',
+        component: () => 
+          import( '@/views/GenExams.vue' ),
+      },      
     ]
   },
 
@@ -104,6 +89,22 @@ const routes = [
         path: '/calculadora',
         name: 'Calculadora',
         component: () => import( '@/views/Calculadora.vue' ),
+      },
+      {
+        path: '/gen-balotario',
+        name: 'GenBalotario',
+        component: () => import( '@/views/GenBalotario.vue' ),
+      },
+      {
+        path: '/practicar',
+        name: 'Balotario',
+        component: () => import( '@/views/ExampleBalotario.vue' ),
+      },
+      {
+        path: '/exam/:examId',
+        name: 'ExamForm',
+        component: () => import('@/views/ExampleForm.vue'), 
+        props: true, 
       },
       { 
         path: '/:pathMatch(.*)*',
