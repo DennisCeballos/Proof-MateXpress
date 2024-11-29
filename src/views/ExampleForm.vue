@@ -20,24 +20,24 @@
         </div>
 
         <!-- Opción múltiple -->
-        <div v-if="question.type === 'opcionmultiple'" class="flex flex-col">
+        <div v-if="question.tipo === 'opcionmultiple'" class="flex flex-col">
           <div
-            v-for="option in question.opciones"
-            :key="option"
+            v-for="opcion in question.opciones"
+            :key="opcion"
             class="flex items-center mb-2"
           >
             <input
               type="radio"
-              :id="option"
-              :value="option"
+              :id="`${question.id}-${opcion}`"
+              :value="opcion"
               v-model="responses[question.id]"
               class="mr-2"
             />
-            <label :for="option" class="flex items-center">
-              <span v-if="isLatex(option)">
-                <VueLatex :expression="option" />
+            <label :for="`${question.id}-${opcion}`" class="flex items-center">
+              <span v-if="isLatex(opcion)">
+                <VueLatex :expression="opcion" />
               </span>
-              <span v-else v-html="option"></span>
+              <span v-else v-html="opcion"></span>
             </label>
           </div>
         </div>
@@ -116,15 +116,15 @@ const regenarateForm = async () => {
     questions.value = questions.value.map((question) => {
       const randomizedQuestion = {
         ...question,
-        question: randomizeNumbers(question.question),
+        question: randomizeNumbers(question.problema),
       };
 
-      if (randomizedQuestion.latex) {
-        randomizedQuestion.latex = randomizeNumbers(randomizedQuestion.latex);
+      if (randomizedQuestion.problema) {
+        randomizedQuestion.problema = randomizeNumbers(randomizedQuestion.problema);
       }
 
-      if (question.type === 'multipleChoice' && question.options) {
-        randomizedQuestion.options = question.options.map(randomizeNumbers);
+      if (question.type === 'opcionmultiple' && question.opciones) {
+        randomizedQuestion.opciones = question.opciones.map(randomizeNumbers);
       }
 
       return randomizedQuestion;
