@@ -10,6 +10,7 @@ const props = defineProps({
 
     const copyLink = async () => {
     const link = getShareableLink(props.state);
+    console.log(props.state)
     await navigator.clipboard.writeText(link);
     copied.value = true;
     setTimeout(() => {
