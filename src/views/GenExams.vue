@@ -77,250 +77,144 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
-import { add, det, subtract, transpose, multiply } from 'mathjs'
-import 'latex-to-js'
+  import { ref, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
+  import { det, transpose } from 'mathjs';
+  import { evaluateTex } from 'tex-math-parser'
 
-// Reactive variables
-const TiposExamenes = ref([]);
-const selectedExam = ref(null);
-const nrQuestions = ref('');
-const difficulty = ref('');
-const router = useRouter();
-const loading = ref(false);
+  // Reactive variables
+  const TiposExamenes = ref([]);
+  const selectedExam = ref(null);
+  const nrQuestions = ref('');
+  const difficulty = ref('');
+  const router = useRouter();
+  const loading = ref(false);
 
-const min = -25;
-const max = 100;
+  const min = -40;
+  const max = 100;
 
-// hardcodeando all day
-const operationMap = {
-  'pregunta3': 'sum_array',
-  'pregunta4': 'sum_array',
-  'pregunta2': 'trans_array',
-  'pregunta1': 'det_array',
-  'pregunta5': 'res_array',
-  'pregunta6': 'res_array',
-  'pregunta9': 'det_array',
-  'pregunta10': 'trans_array',
-  'pregunta7': 'mult_array',
-  'pregunta8': 'mult_array'
-};
+  // Función para obtener preguntas aleatorias
+  const getRandomQuestions = (questionsArray, n) => {
+    const selected = [];
+    const copiedArray = [...questionsArray];
 
-const findArrayByQuestion = (question) => {
-  return operationMap[question] || 'none';
-};
+    while (selected.length < n && copiedArray.length > 0) {
+      const randomIndex = Math.floor(Math.random() * copiedArray.length);
+      selected.push(copiedArray.at(randomIndex));
+    }
+    return selected;
+  };
 
-const calculateMatrixOperation = (matrices, operationId) => {
-  if (!Array.isArray(matrices) || matrices.length === 0) {
-    console.error("No se proporcionaron matrices.");
-    return null;
-  }
+  // Selección del examen
+  const selectExam = (examId) => {
+    selectedExam.value = examId;
+  };
 
-  // Verifica si hay más de una matriz cuando se requiere
-  if ((operationId !== 'trans_array' 
-    || operationId !== 'det_array' 
-  ) 
-  && matrices.length !== 2) {
-    console.error("Se requieren exactamente dos matrices para esta operación.");
-    return null;
-  }
+  // Generar números aleatorios
+  const generateRandomNumber = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
 
-  let result;
+  // Reemplazar números con valores aleatorios
+  const randomizeNumbers = (text) => {
+    return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
+  };
 
-  switch (operationId) {
-    case 'sum_array':
-      result = add(matrices[0], matrices[1]);
-      break;
-    case 'res_array':
-      result = subtract(matrices[0], matrices[1]);
-      break;
-    case 'mult_array':
-      result = multiply(matrices[0], matrices[1]);
-      break;
-    case 'det_array':
-      if (matrices.length === 1) {
-        result = det(matrices[0]);
-      } else {
-        console.error("El determinante solo puede ser calculado para una matriz.");
-        return null;
-      }
-      break;
-    case 'trans_array':
-      result = transpose(matrices[0]);
-      break;
-    default:
-      console.error("Operación no soportada.");
-      return null;
-  }
-  
-  if (Array.isArray(result)) {
-    return math.matrix(result).toTex();
-  } else {
-    return result.toString();
-  }
-};
+  // Generar el examen
+  const generateExam = async () => {
+    if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
+      alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
+      return;
+    }
 
-// Fetch exam types from Firebase
-const fetchExams = async () => {
-  try {
-    const examCollection = collection(db, 'tiposExamenes');
-    const examSnapshot = await getDocs(examCollection);
-    TiposExamenes.value = examSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-  } catch (error) {
-    console.error('Error al cargar los exámenes:', error);
-  }
-};
+    loading.value = true;
 
-// Function to randomly select `n` questions from an array
-const getRandomQuestions = (questionsArray, n) => {
-  const selected = [];
-  const copiedArray = [...questionsArray];
+    try {
+      const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
+      const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
+      const allQuestions = questionsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-  while (selected.length < n && copiedArray.length > 0) {
-    const randomIndex = Math.floor(Math.random() * copiedArray.length);
-    selected.push(copiedArray.at(randomIndex));
-  }
-  return selected;
-};
+      const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
 
-const selectExam = (examId) => {
-  selectedExam.value = examId;
-};
-
-// Generate exam logic
-const generateExam = async () => {
-  if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
-    alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
-    alert(selectedExam.value + ' ' + nrQuestions.value + ' ' + isNaN(nrQuestions))
-    return;
-  }
-
-  loading.value = true;
-
-  try {
-    // Fetch questions from the selected exam type
-    const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
-    const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
-    const allQuestions = questionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Create a new array of questions based on `nrQuestions`
-    const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
-
-    // Save the new array into the "exams" collection
-    const newExam = {
-      questions: newQuestionsArray,
-      difficulty: difficulty.value || 'normal',
-      createdAt: new Date().toISOString(),
-    };
-    console.log(newExam)
-    newExam.questions = newExam.questions.map((preg) => {
-      const randomizedQuestion = {
-        ...preg,
-        problema: randomizeNumbers(preg.problema),
+      const newExam = {
+        questions: newQuestionsArray,
+        difficulty: difficulty.value || 'normal',
+        createdAt: new Date().toISOString(),
       };
-      
-      if (randomizedQuestion.pregunta) {
-        randomizedQuestion.pregunta = randomizeNumbers(randomizedQuestion.pregunta);
+
+      const convertToLatex = (texAnswer) =>  {
+        if (!texAnswer || !texAnswer.evaluated || !texAnswer.evaluated._data) {
+          throw new Error("El resultado no contiene datos válidos para convertir a LaTeX");
+        }
+        const matrixData = texAnswer.evaluated._data;
+
+        const latexMatrix = matrixData
+          .map((row) => row.join(" & ")) 
+          .join(" \\\\ ");
+
+        return `\\begin{bmatrix}\n${latexMatrix}\n\\end{bmatrix}`;
       }
 
-      if (preg.tipo === 'opcionmultiple' && preg.opciones) {
-        // a atacar
-        /*
-          Quiero:
-           - Convertir las matrices de latex a js, en caso haya mas de una separarlas, maximo hay 2
-           - usar mathjs para operar
-           - convertir el resultado a latex de nuevo
-           - En el rango de las opciones antiguas, poner la nueva
-           - listo
-        */
-        randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
-      }
+      newExam.questions = newExam.questions.map((preg) => {
+        const randomizedQuestion = {
+          ...preg,
+          problema: randomizeNumbers(preg.problema),
+        };
 
-      return randomizedQuestion;
-    });
+        if (preg.tipo === 'opcionmultiple') {
+          let texAnswer;
+          const matrix = evaluateTex(randomizedQuestion.problema);
+          console.log(matrix)
+          
+          if (matrix && matrix.evaluated && matrix.evaluated._data) {
+            // Determinante para preguntas 1 y 9
+            if (preg.id === 'pregunta1' || preg.id === 'pregunta9') {
+              texAnswer = String(det(matrix.evaluated._data));
+            } else if (preg.id === 'pregunta2' || preg.id === 'pregunta10') {
+              const transposedMatrix = {
+                evaluated: {
+                  _data: transpose(matrix.evaluated._data)
+                }
+              };
+              texAnswer = convertToLatex(transposedMatrix);
+            } else {
+              texAnswer = convertToLatex(matrix);
+            }
+          }
 
-    // guarda el nuevo examen y obtiene el id
-    const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
+          if (texAnswer !== undefined) {
+            let opciones = preg.opciones.map(randomizeNumbers);
+            const randomIndex = Math.floor(Math.random() * opciones.length);
+            opciones[randomIndex] = texAnswer;
+            randomizedQuestion.opciones = opciones;
+          } else {
+            randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
+          }
+        }
 
-    // Redirect to the new exam's view
-    router.push(`/exam/${newExamDoc.id}`);
-  } catch (error) {
-    console.error('Error al generar el examen:', error);
-    alert('Hubo un error al generar el examen. Por favor, intente nuevamente.');
-  } finally {
-    loading.value = false;
-  }
-};
+        return randomizedQuestion;
+      });
 
-const latexToMathJsObject = (latexExpression) => {
-  if (!latexExpression || typeof latexExpression !== 'string') {
-    throw new Error('Invalid LaTeX expression');
-  }
+      const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
 
-  try {
-    const parsed = latexToJs.parse(latexExpression);
-
-    if (parsed.type === 'Matrix') {
-      const matrixData = parsed.elements.map((row) =>
-        row.map((element) => math.evaluate(element.toString()))
-      );
-      return math.matrix(matrixData); 
+      router.push(`/exam/${newExamDoc.id}`);
+    } catch (error) {
+      console.error('Error al generar el examen:', error);
+      alert('Hubo un error al generar el examen. Por favor, intente nuevamente.');
+    } finally {
+      loading.value = false;
     }
+  };
 
-    if (parsed.type === 'Expression') {
-      return parsed.toString();
-    }
-
-    throw new Error('Unsupported LaTeX structure');
-  } catch (error) {
-    console.error('Error parsing LaTeX:', error);
-    throw new Error('Failed to convert LaTeX to Math.js object');
-  }
-};
-
-const separateMatrices = (problem) => {
-  if (!problem) {
-    console.error("Problem is null or undefined!");
-    return [];
-  }
-  const matrixRegex = /\\begin\{bmatrix\}[\s\S]*?\\end\{bmatrix\}/g;
-
-  const matrices = problem.match(matrixRegex);
-
-  if (!matrices) {
-    console.error("Error, no hay matrices!");
-    return [];
-  }
-  console.log(matrices);
-  return matrices;
-};
-const randomizeNumbers = (text) => {
-  return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
-};
-
-const generateRandomNumber = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-// Fetch exams when the component mounts
-onMounted(() => {
-  fetchExams();
-});
+  onMounted(async () => {
+    const examTypesSnapshot = await getDocs(collection(db, 'tiposExamenes'));
+    TiposExamenes.value = examTypesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
 </script>
-
-<style>
-  body {
-    margin: 0;
-    background-color: #f8fafc;
-    font-family: Arial, sans-serif;
-    overflow: scroll; 
-  }
-</style>
