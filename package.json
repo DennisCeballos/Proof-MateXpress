@@ -13,6 +13,8 @@
     "@tailwindcss/forms": "^0.5.3",
     "axios": "^1.2.1",
     "firebase": "^11.0.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
     "katex": "^0.13.24",
     "mathjax": "^3.2.2",
     "mathjax-full": "^3.2.2",
@@ -25,6 +27,7 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
+    "@types/mathjax": "^0.0.40",
     "@vitejs/plugin-vue": "^5.1.4",
     "autoprefixer": "^10.4.20",
     "tailwindcss": "^3.2.4",
