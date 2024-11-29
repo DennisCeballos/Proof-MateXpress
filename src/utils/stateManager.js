@@ -32,7 +32,7 @@ const encodeState = (state) => {
   
   const getShareableLink = (state) => {
     const encoded = encodeState(state);
-    return `${window.location.origin}${window.location.pathname}#${encoded}`;  // Crear un enlace con el estado codificado
+    return `${window.location.origin}/calculadora#${encoded}`;  // Crear un enlace con el estado codificado
   };
 
 export { encodeState, decodeState, getShareableLink };

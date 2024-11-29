@@ -22,6 +22,11 @@
                             <VueLatex :expression="question.respuestaCorrecta" />
                         </span>
                         <span v-else v-html="question.respuestaCorrecta"></span>
+                        <!-- Calcular Button -->
+                        <button @click="redirectToCalculadora(question.problema)"
+                            class="ml-4 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring">
+                            Calcular
+                        </button>
                     </div>
                 </div>
             </div>
@@ -50,6 +55,7 @@ import { evaluateTex } from 'tex-math-parser'
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import katex from 'katex';
+import { encodeState } from '@/utils/stateManager';
 
 // Variables para almacenar el examen y las preguntas
 const questions = ref([]);
@@ -106,6 +112,65 @@ const backPage = () => {
     router.push(`/gen-balotario`)
 };
 
+// Function to parse the LaTeX string and populate the required object
+const parseLatexToMatrices = (latexString) => {
+    // Regular expression to extract matrices and the operation
+    const matrixRegex = /\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/g;
+    const operationRegex = /(\+|-|\*|\\times|\\div)/; // Add more operations if needed
+
+    // Find all matrices in the LaTeX string
+    const matrices = [...latexString.matchAll(matrixRegex)].map((match) => match[1]);
+
+    // Parse each matrix into a 2D array
+    const parseMatrix = (matrixString) => {
+        return matrixString
+            .trim()
+            .split('\\\\') // Split rows
+            .map((row) => row.trim().split('&').map((value) => parseFloat(value.trim()))); // Split columns and parse numbers
+    };
+
+    if (matrices.length === 1) {
+        // Case for determinant calculation
+        const matrixAData = parseMatrix(matrices[0]);
+        return {
+            matrixA: matrixAData,
+            rowsA: matrixAData.length,
+            colsA: matrixAData[0].length,
+            matrixB: null, // No second matrix
+            rowsB: null,
+            colsB: null,
+            operation: 'determinant', // Set operation to determinant
+        };
+    } else if (matrices.length < 2) {
+        throw new Error('Invalid LaTeX: Less than one matrix found.');
+    }
+
+    // Extract the operation
+    const operationMatch = latexString.match(operationRegex);
+    const operationMap = { '+': 'add', '-': 'subtract', '\\times': 'multiply', '\\div': 'divide' };
+    const operation = operationMatch ? operationMap[operationMatch[0]] : 'multiply'; // Default to multiply if no operator
+
+    const matrixAData = parseMatrix(matrices[0]);
+    const matrixBData = parseMatrix(matrices[1]);
+
+    // Create the object with the parsed data
+    return {
+        matrixA: matrixAData,
+        rowsA: matrixAData.length,
+        colsA: matrixAData[0].length,
+        matrixB: matrixBData,
+        rowsB: matrixBData.length,
+        colsB: matrixBData[0].length,
+        operation: operation,
+    };
+};
+
+
+const redirectToCalculadora = (problema) => {
+    const codigo = parseLatexToMatrices(problema);
+    console.log(codigo)
+    router.push(`/calculadora#${encodeState(codigo)}`);
+};
 
 // Function to randomly select `n` questions from an array
 const getRandomQuestions = (questionsArray, n) => {
@@ -155,15 +220,15 @@ const fetchExamDetails = async () => {
             createdAt: new Date().toISOString(),
         };
 
-        const convertToLatex = (texAnswer) =>  {
+        const convertToLatex = (texAnswer) => {
             if (!texAnswer || !texAnswer.evaluated || !texAnswer.evaluated._data) {
-            throw new Error("El resultado no contiene datos válidos para convertir a LaTeX");
+                throw new Error("El resultado no contiene datos válidos para convertir a LaTeX");
             }
             const matrixData = texAnswer.evaluated._data;
 
             const latexMatrix = matrixData
-            .map((row) => row.join(" & ")) 
-            .join(" \\\\ ");
+                .map((row) => row.join(" & "))
+                .join(" \\\\ ");
 
             return `\\begin{bmatrix}\n${latexMatrix}\n\\end{bmatrix}`;
         }
@@ -181,7 +246,7 @@ const fetchExamDetails = async () => {
             if (preg.problema) {
                 let texAnswer;
                 const matrix = evaluateTex(randomizedQuestion.problema);
-                
+
                 if (matrix && matrix.evaluated && matrix.evaluated._data) {
                     // Determinante para preguntas 1 y 9
                     if (preg.id === 'pregunta1' || preg.id === 'pregunta9') {
