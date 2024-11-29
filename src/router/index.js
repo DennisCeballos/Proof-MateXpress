@@ -36,27 +36,6 @@ const routes = [
     ]
   },
 
-  // Email verification
-  {
-    path: '/verify-email',
-    component: () => import( '@/components/DefaultLayout.vue' ),    
-    children: [
-      {
-        path: '/verify-email',
-        name: 'VerifyEmail',
-        meta: {
-          requiresAuth: true,
-        },
-        component: () => import( '@/views/VerifyEmail.vue' ),
-      },
-      {
-        path: '/verify-email-check',
-        name: 'VerifyEmailCheck',
-        component: () => import( '@/views/VerifyEmailCheck.vue' ),
-      }
-    ]
-  },
-
   // Dashboard area
   {
     path: '/dashboard',
@@ -73,7 +52,7 @@ const routes = [
           import( '@/views/Dashboard.vue' ),
       },
       {
-        path: '/gen-exams',
+        path: '/gen-examenes',
         name: 'Examenes',
         component: () => 
           import( '@/views/GenExams.vue' ),

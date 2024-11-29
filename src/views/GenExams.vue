@@ -1,84 +1,178 @@
 <template>
-    <div class="max-w-4xl mx-auto p-6">
-      <h1 class="text-2xl font-bold mb-6">Genera examenes</h1>
-  
-      <!-- Mensaje mientras se obtienen los exámenes -->
-      <p v-if="loading" class="text-center text-gray-500">Obteniendo exámenes...</p>
-  
-      <!-- Mensaje si no hay exámenes -->
-      <p v-else-if="!exams.length" class="text-center text-gray-500">¡No hay exámenes para ti!</p>
-  
-      <!-- Lista de exámenes -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <!-- Container for the options and form -->
+    <div class="flex items-start space-x-8">
+      <!-- Left: Exam options -->
+      <div class="w-1/3 space-y-4">
         <div
-          v-for="exam in exams"
-          :key="exam.id"
-          @click="goToExam(exam.id)"
-          class="cursor-pointer border border-gray-300 rounded-lg p-4 shadow hover:shadow-lg transition"
+          v-for="tipoExam in TiposExamenes"
+          :key="tipoExam.id"
+          @click="selectExam(tipoExam.id)"
+          :class="[
+            'cursor-pointer border rounded-lg p-4 shadow hover:shadow-lg transition',
+            selectedExam === tipoExam.id ? 'border-blue-500' : 'border-gray-300',
+          ]"
         >
-          <!-- Contenedor de la miniatura con relación de aspecto fija -->
+          <!-- Thumbnail -->
           <div class="relative pb-56 bg-gray-200 rounded overflow-hidden">
             <img
-              v-if="exam.thumbnail"
-              :src="exam.thumbnail"
+              v-if="tipoExam.thumbnail"
+              :src="tipoExam.thumbnail"
               alt="Thumbnail"
               class="absolute top-0 left-0 w-full h-full object-cover"
             />
           </div>
-          <!-- Fallback para título y descripción -->
+          <!-- Title and description -->
           <h2 class="text-lg font-semibold text-blue-600 mt-4">
-            {{ exam.title || 'Título no disponible' }}
+            {{ tipoExam.nombre || 'Título no disponible' }}
           </h2>
           <p class="text-gray-700 mt-2">
-            {{ exam.summary || 'Descripción no disponible' }}
+            {{ tipoExam.descripcion || 'Descripción no disponible' }}
           </p>
         </div>
       </div>
+
+      <!-- Right: Form -->
+      <div class="bg-white shadow-lg rounded-lg p-6 w-96">
+        <h1 class="text-2xl font-bold mb-6 text-center">Generar Exámenes</h1>
+        <form @submit.prevent="generateExam">
+          <!-- Input for number of questions -->
+          <div class="mb-4">
+            <label for="nrQuestions" class="block text-gray-700 font-semibold mb-2">Número de Preguntas</label>
+            <input
+              id="nrQuestions"
+              type="number"
+              v-model="nrQuestions"
+              min="1"
+              class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
+
+          <!-- Input for difficulty -->
+          <div class="mb-4">
+            <label for="difficulty" class="block text-gray-700 font-semibold mb-2">Dificultad</label>
+            <input
+              id="difficulty"
+              type="number"
+              v-model="difficulty"
+              min="1"
+              max="10"
+              class="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300"
+            />
+          </div>
+
+          <!-- Generate button -->
+          <div class="text-center">
+            <button
+              type="submit"
+              class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
+            >
+              Generar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted } from 'vue';
-  import { db, collection, getDocs } from '../firebase/firebaseConfig';
-  import { useRouter } from 'vue-router';
-  
-  // Variables reactivas
-  const exams = ref([]);
-  const loading = ref(true);
-  const router = useRouter();
-  
-  // Función para obtener exámenes desde Firebase
-  const fetchExams = async () => {
-    try {
-      const examCollection = collection(db, 'exams');
-      const examSnapshot = await getDocs(examCollection);
-      exams.value = examSnapshot.docs.map((doc) => ({
-        id: doc.id, // ID del documento
-        ...doc.data(), // Datos del documento (title, summary, thumbnail)
-      }));
-      console.log('Exámenes cargados:', exams.value);
-    } catch (error) {
-      console.error('Error al cargar los exámenes:', error);
-    } finally {
-      loading.value = false; // Finaliza el estado de carga
-    }
-  };
-  
-  // Función para redireccionar al examen
-  const goToExam = (examId) => {
-    router.push(`/exam/${examId}`);
-  };
-  
-  // Carga de exámenes al montar el componente
-  onMounted(() => {
-    fetchExams();
-  });
-  </script>
-  
-  <style>
-  body {
-    margin: 0;
-    overflow: scroll; 
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
+
+// Reactive variables
+const TiposExamenes = ref([]);
+const selectedExam = ref(null);
+const nrQuestions = ref('');
+const difficulty = ref('');
+const router = useRouter();
+const loading = ref(false);
+
+// Fetch exam types from Firebase
+const fetchExams = async () => {
+  try {
+    const examCollection = collection(db, 'tiposExamenes');
+    const examSnapshot = await getDocs(examCollection);
+    TiposExamenes.value = examSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error('Error al cargar los exámenes:', error);
   }
-  </style>
-  
+};
+
+// Function to randomly select `n` questions from an array
+const getRandomQuestions = (questionsArray, n) => {
+  const selected = [];
+  const copiedArray = [...questionsArray];
+
+  while (selected.length < n && copiedArray.length > 0) {
+    const randomIndex = Math.floor(Math.random() * copiedArray.length);
+    selected.push(copiedArray.at(randomIndex));
+  }
+  return selected;
+};
+
+const selectExam = (examId) => {
+  selectedExam.value = examId;
+};
+
+// Generate exam logic
+const generateExam = async () => {
+  if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
+    alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
+    alert(selectedExam.value + ' ' + nrQuestions.value + ' ' + isNaN(nrQuestions))
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    // Fetch questions from the selected exam type
+    const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
+    const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
+    const allQuestions = questionsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Create a new array of questions based on `nrQuestions`
+    const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
+
+    // Save the new array into the "exams" collection
+    const newExam = {
+      questions: newQuestionsArray,
+      difficulty: difficulty.value || 'normal',
+      createdAt: new Date().toISOString(),
+    };
+
+    
+
+    const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
+
+    // Redirect to the new exam's view
+    router.push(`/exam/${newExamDoc.id}`);
+  } catch (error) {
+    console.error('Error al generar el examen:', error);
+    alert('Hubo un error al generar el examen. Por favor, intente nuevamente.');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Fetch exams when the component mounts
+onMounted(() => {
+  fetchExams();
+});
+</script>
+
+
+<style>
+body {
+  margin: 0;
+  background-color: #f8fafc;
+  font-family: Arial, sans-serif;
+}
+</style>

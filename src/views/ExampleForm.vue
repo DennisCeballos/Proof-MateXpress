@@ -4,13 +4,13 @@
     <div v-if="questions.length">
       <div v-for="question in questions" :key="question.id" class="mb-4">
         <!-- Pregunta -->
-        <h2 class="text-lg font-medium mb-2" v-html="question.question"></h2>
+        <h2 class="text-lg font-medium mb-2" v-html="question.enunciado"></h2>
          <!-- Expresión LaTeX -->
-          <div v-if="question.latex">
-            <VueLatex :expression="question.latex" display-mode />
+          <div v-if="question.problema">
+            <VueLatex :expression="question.problema" display-mode />
           </div>
         <!-- Respuesta de texto -->
-        <div v-if="question.type === 'text'" class="mt-2">
+        <div v-if="question.tipo === 'texto'" class="mt-2">
           <textarea
             v-model="responses[question.id]"
             placeholder="Escribe tu respuesta aquí..."
@@ -20,9 +20,9 @@
         </div>
 
         <!-- Opción múltiple -->
-        <div v-if="question.type === 'multipleChoice'" class="flex flex-col">
+        <div v-if="question.type === 'opcionmultiple'" class="flex flex-col">
           <div
-            v-for="option in question.options"
+            v-for="option in question.opciones"
             :key="option"
             class="flex items-center mb-2"
           >
@@ -138,26 +138,6 @@ const regenarateForm = async () => {
   }
 };
 
-const regenerateForm = async () => {
-  try {
-    questions.value = questions.value.map((question) => {
-      // Modificar las matrices o las opciones, si existen
-      if (question.type === 'multipleChoice' && question.options) {
-        question.options = question.options.map(() => generateRandomNumber(min, max));
-      }
-
-      if (question.latex) {
-        question.latex = replaceMatrixWithRandomNumbers(question.latex);
-      }
-
-      return question;
-    });
-
-    console.log('Examen regenerado:', questions.value);
-  } catch (error) {
-    console.error('Error al regenerar el examen:', error);
-  }
-};
 
 const generateRandomNumber = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -166,11 +146,6 @@ const generateRandomNumber = (min, max) => {
 const randomizeNumbers = (text) => {
   return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
 };
-
-const replaceMatrixWithRandomNumbers = (latex) => {
-  return latex.replace(/-?\d+/g, () => generateRandomNumber(min, max));
-};
-
 
 const isLatex = async (content) => {
   return content.includes("\\b");
@@ -184,20 +159,31 @@ const examId = route.params.examId;
 const fetchExamDetails = async () => {
   try {
     const examDoc = doc(db, 'exams', examId);
-    const examSnapshot = await getDoc(examDoc); // por si acaso
+    const examSnapshot = await getDoc(examDoc); // Fetch the document
 
-    // Cargar las preguntas desde la subcolección 'questions'
-    const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
-    questions.value = questionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    if (examSnapshot.exists()) {
+      // Get the 'questions' field from the document
+      const questionsData = examSnapshot.data().questions;
 
-    console.log('Preguntas cargadas:', questions.value);
+      // Check if questionsData is an array or an object
+      if (Array.isArray(questionsData)) {
+        questions.value = questionsData.map((question, index) => ({
+          id: index.toString(), // Optional: create an id if necessary
+          ...question,
+        }));
+      } else {
+        console.error('Questions data is not an array');
+      }
+
+      console.log('Preguntas cargadas:', questions.value);
+    } else {
+      console.error('No exam found with the given ID');
+    }
   } catch (error) {
     console.error('Error al cargar detalles del examen:', error);
   }
 };
+
 
 
 // Cargar detalles del examen al montar el componente

@@ -24,13 +24,13 @@
           IR A ESTUDIAR
         </router-link>
         <router-link
-        to="/login"
+        to="/gen-examenes"
           class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 sm:py-5 px-8 sm:px-10 rounded-xl text-lg sm:text-2xl shadow-lg"
         >
           Para profesores
         </router-link>
         <router-link
-        to="/calculator"
+        to="/calculadora"
           class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 sm:py-5 px-8 sm:px-10 rounded-xl text-lg sm:text-2xl shadow-lg"
         >
           Calculadora Pro
