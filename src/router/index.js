@@ -137,7 +137,7 @@ router.beforeEach( ( to, from, next ) => {
 
   } else if( token && reqGuest ) {    
 
-    _next = { name: 'Dashboard' }
+    _next = { name: 'Home' }
 
   } else if( reqEmVer && ! emailVerification() ) {
 

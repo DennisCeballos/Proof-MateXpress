@@ -31,7 +31,7 @@
               <span 
                 class="text-white"
                 v-else
-              >Hi, there! :)</span>
+              >Hola Invitado :)</span>
 
               <!-- Profile dropdown -->
               <Menu as="div" class="relative ml-3">
@@ -128,15 +128,13 @@
   
   const navigation = [
     { name: 'Home', label: 'Home' },
-    { name: 'About', label: 'About' },
     { name: 'Calculadora', label: 'Calculadora'},
     { name: 'GenBalotario', label: 'Balotario'},
   ]
 
   const userNavigation = [
-    { name: 'Dashboard', label: 'Dashboard', reqAuth: true },
     { name: 'Logout', label: 'Logout', reqAuth: true },
-    { name: 'Register', label: 'Register', reqGuest: true },
+    { name: 'Register', label: 'Registrarse', reqGuest: true },
     { name: 'Login', label: 'Login', reqGuest: true },
   ]
 
