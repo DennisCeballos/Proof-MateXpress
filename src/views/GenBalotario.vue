@@ -76,5 +76,10 @@
   </script>
   
   <style>
+  @import "katex/dist/katex.min.css"; 
+  body {
+    margin: 0;
+    overflow: scroll; 
+  }
   </style>
   

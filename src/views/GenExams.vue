@@ -80,6 +80,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
+import { add, det, subtract, transpose, multiply } from 'mathjs'
+import 'latex-to-js'
 
 // Reactive variables
 const TiposExamenes = ref([]);
@@ -91,6 +93,74 @@ const loading = ref(false);
 
 const min = -25;
 const max = 100;
+
+// hardcodeando all day
+const operationMap = {
+  'pregunta3': 'sum_array',
+  'pregunta4': 'sum_array',
+  'pregunta2': 'trans_array',
+  'pregunta1': 'det_array',
+  'pregunta5': 'res_array',
+  'pregunta6': 'res_array',
+  'pregunta9': 'det_array',
+  'pregunta10': 'trans_array',
+  'pregunta7': 'mult_array',
+  'pregunta8': 'mult_array'
+};
+
+const findArrayByQuestion = (question) => {
+  return operationMap[question] || 'none';
+};
+
+const calculateMatrixOperation = (matrices, operationId) => {
+  if (!Array.isArray(matrices) || matrices.length === 0) {
+    console.error("No se proporcionaron matrices.");
+    return null;
+  }
+
+  // Verifica si hay más de una matriz cuando se requiere
+  if ((operationId !== 'trans_array' 
+    || operationId !== 'det_array' 
+  ) 
+  && matrices.length !== 2) {
+    console.error("Se requieren exactamente dos matrices para esta operación.");
+    return null;
+  }
+
+  let result;
+
+  switch (operationId) {
+    case 'sum_array':
+      result = add(matrices[0], matrices[1]);
+      break;
+    case 'res_array':
+      result = subtract(matrices[0], matrices[1]);
+      break;
+    case 'mult_array':
+      result = multiply(matrices[0], matrices[1]);
+      break;
+    case 'det_array':
+      if (matrices.length === 1) {
+        result = det(matrices[0]);
+      } else {
+        console.error("El determinante solo puede ser calculado para una matriz.");
+        return null;
+      }
+      break;
+    case 'trans_array':
+      result = transpose(matrices[0]);
+      break;
+    default:
+      console.error("Operación no soportada.");
+      return null;
+  }
+  
+  if (Array.isArray(result)) {
+    return math.matrix(result).toTex();
+  } else {
+    return result.toString();
+  }
+};
 
 // Fetch exam types from Firebase
 const fetchExams = async () => {
@@ -162,6 +232,15 @@ const generateExam = async () => {
       }
 
       if (preg.tipo === 'opcionmultiple' && preg.opciones) {
+        // a atacar
+        /*
+          Quiero:
+           - Convertir las matrices de latex a js, en caso haya mas de una separarlas, maximo hay 2
+           - usar mathjs para operar
+           - convertir el resultado a latex de nuevo
+           - En el rango de las opciones antiguas, poner la nueva
+           - listo
+        */
         randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
       }
 
@@ -181,6 +260,48 @@ const generateExam = async () => {
   }
 };
 
+const latexToMathJsObject = (latexExpression) => {
+  if (!latexExpression || typeof latexExpression !== 'string') {
+    throw new Error('Invalid LaTeX expression');
+  }
+
+  try {
+    const parsed = latexToJs.parse(latexExpression);
+
+    if (parsed.type === 'Matrix') {
+      const matrixData = parsed.elements.map((row) =>
+        row.map((element) => math.evaluate(element.toString()))
+      );
+      return math.matrix(matrixData); 
+    }
+
+    if (parsed.type === 'Expression') {
+      return parsed.toString();
+    }
+
+    throw new Error('Unsupported LaTeX structure');
+  } catch (error) {
+    console.error('Error parsing LaTeX:', error);
+    throw new Error('Failed to convert LaTeX to Math.js object');
+  }
+};
+
+const separateMatrices = (problem) => {
+  if (!problem) {
+    console.error("Problem is null or undefined!");
+    return [];
+  }
+  const matrixRegex = /\\begin\{bmatrix\}[\s\S]*?\\end\{bmatrix\}/g;
+
+  const matrices = problem.match(matrixRegex);
+
+  if (!matrices) {
+    console.error("Error, no hay matrices!");
+    return [];
+  }
+  console.log(matrices);
+  return matrices;
+};
 const randomizeNumbers = (text) => {
   return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
 };
@@ -195,11 +316,11 @@ onMounted(() => {
 });
 </script>
 
-
 <style>
-body {
-  margin: 0;
-  background-color: #f8fafc;
-  font-family: Arial, sans-serif;
-}
+  body {
+    margin: 0;
+    background-color: #f8fafc;
+    font-family: Arial, sans-serif;
+    overflow: scroll; 
+  }
 </style>
