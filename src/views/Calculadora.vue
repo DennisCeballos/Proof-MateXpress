@@ -212,13 +212,11 @@
               <div>
                 <label class="block text-sm">Filas:</label>
                 <input type="number" v-model.number="rowsB" min="1" max="10"
-                  :disabled="operation === 'add' || operation === 'subtract' || operation === 'multiply'"
                   class="w-20 p-1 border rounded" />
               </div>
               <div>
                 <label class="block text-sm">Columnas:</label>
-                <input type="number" v-model.number="colsB" min="1" max="10"
-                  :disabled="operation === 'add' || operation === 'subtract'" class="w-20 p-1 border rounded" />
+                <input type="number" v-model.number="colsB" min="1" max="10"/>
               </div>
             </div>
             <MatrixInput :rows="rowsB" :cols="colsB" label="Matriz B" @update:matrix="matrixB = $event" />
