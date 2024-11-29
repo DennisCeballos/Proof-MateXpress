@@ -130,7 +130,7 @@
     { name: 'Home', label: 'Home' },
     { name: 'About', label: 'About' },
     { name: 'Calculadora', label: 'Calculadora'},
-    { name: 'Balotario', label: 'Balotario'},
+    { name: 'GenBalotario', label: 'Balotario'},
   ]
 
   const userNavigation = [

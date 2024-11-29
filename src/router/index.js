@@ -92,8 +92,13 @@ const routes = [
       },
       {
         path: '/gen-balotario',
-        name: 'Balotario',
+        name: 'GenBalotario',
         component: () => import( '@/views/GenBalotario.vue' ),
+      },
+      {
+        path: '/practicar',
+        name: 'Balotario',
+        component: () => import( '@/views/ExampleBalotario.vue' ),
       },
       {
         path: '/exam/:examId',
