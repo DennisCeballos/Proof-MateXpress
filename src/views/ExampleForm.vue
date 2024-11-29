@@ -67,15 +67,6 @@
       Enviar
     </button>
 
-    -
-
-    <button
-      @click="regenarateForm"
-      class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring"
-    >
-      Regenerar examen
-    </button>
-
     <!-- Mensaje -->
     <p v-if="message" class="text-green-600 mt-4">{{ message }}</p>
   </div>
@@ -92,10 +83,6 @@ const responses = ref({});
 const message = ref('');
 
 const router = useRouter();
-
-const min = -25;
-const max = 100;
-
 // Función para manejar el envío del formulario
 const submitForm = async () => {
   try {
@@ -108,44 +95,9 @@ const submitForm = async () => {
 };
 
 const backPage = () => {
-  router.push(`/exams`)
+  router.push(`/gen-examenes`)
 };
 
-const regenarateForm = async () => {
-  try {
-    questions.value = questions.value.map((question) => {
-      const randomizedQuestion = {
-        ...question,
-        question: randomizeNumbers(question.problema),
-      };
-
-      if (randomizedQuestion.problema) {
-        randomizedQuestion.problema = randomizeNumbers(randomizedQuestion.problema);
-      }
-
-      if (question.type === 'opcionmultiple' && question.opciones) {
-        randomizedQuestion.opciones = question.opciones.map(randomizeNumbers);
-      }
-
-      return randomizedQuestion;
-    });
-    responses.value = {};
-    message.value = 'Examen regenerado correctamente.';
-    //console.log('Preguntas regeneradas:', questions.value);
-  } catch (error) {
-    console.error('Error al regenerar el examen:', error);
-    message.value = 'Hubo un error al regenerar el examen.';
-  }
-};
-
-
-const generateRandomNumber = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-const randomizeNumbers = (text) => {
-  return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
-};
 
 const isLatex = async (content) => {
   return content.includes("\\b");
@@ -194,9 +146,9 @@ onMounted(() => {
 </script>
 
 <style>
-@import "katex/dist/katex.min.css"; 
-body {
-  margin: 0;
-  overflow: scroll; 
-}
+  @import "katex/dist/katex.min.css"; 
+  body {
+    margin: 0;
+    overflow: scroll; 
+  }
 </style>

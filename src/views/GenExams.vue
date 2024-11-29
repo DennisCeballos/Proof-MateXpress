@@ -77,129 +77,144 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
+  import { ref, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { db, doc, collection, getDocs, addDoc } from '../firebase/firebaseConfig';
+  import { det, transpose } from 'mathjs';
+  import { evaluateTex } from 'tex-math-parser'
 
-// Reactive variables
-const TiposExamenes = ref([]);
-const selectedExam = ref(null);
-const nrQuestions = ref('');
-const difficulty = ref('');
-const router = useRouter();
-const loading = ref(false);
+  // Reactive variables
+  const TiposExamenes = ref([]);
+  const selectedExam = ref(null);
+  const nrQuestions = ref('');
+  const difficulty = ref('');
+  const router = useRouter();
+  const loading = ref(false);
 
-const min = -25;
-const max = 100;
+  const min = -40;
+  const max = 100;
 
-// Fetch exam types from Firebase
-const fetchExams = async () => {
-  try {
-    const examCollection = collection(db, 'tiposExamenes');
-    const examSnapshot = await getDocs(examCollection);
-    TiposExamenes.value = examSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-  } catch (error) {
-    console.error('Error al cargar los exámenes:', error);
-  }
-};
+  // Función para obtener preguntas aleatorias
+  const getRandomQuestions = (questionsArray, n) => {
+    const selected = [];
+    const copiedArray = [...questionsArray];
 
-// Function to randomly select `n` questions from an array
-const getRandomQuestions = (questionsArray, n) => {
-  const selected = [];
-  const copiedArray = [...questionsArray];
+    while (selected.length < n && copiedArray.length > 0) {
+      const randomIndex = Math.floor(Math.random() * copiedArray.length);
+      selected.push(copiedArray.at(randomIndex));
+    }
+    return selected;
+  };
 
-  while (selected.length < n && copiedArray.length > 0) {
-    const randomIndex = Math.floor(Math.random() * copiedArray.length);
-    selected.push(copiedArray.at(randomIndex));
-  }
-  return selected;
-};
+  // Selección del examen
+  const selectExam = (examId) => {
+    selectedExam.value = examId;
+  };
 
-const selectExam = (examId) => {
-  selectedExam.value = examId;
-};
+  // Generar números aleatorios
+  const generateRandomNumber = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
 
-// Generate exam logic
-const generateExam = async () => {
-  if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
-    alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
-    alert(selectedExam.value + ' ' + nrQuestions.value + ' ' + isNaN(nrQuestions))
-    return;
-  }
+  // Reemplazar números con valores aleatorios
+  const randomizeNumbers = (text) => {
+    return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
+  };
 
-  loading.value = true;
+  // Generar el examen
+  const generateExam = async () => {
+    if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
+      alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
+      return;
+    }
 
-  try {
-    // Fetch questions from the selected exam type
-    const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
-    const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
-    const allQuestions = questionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    loading.value = true;
 
-    // Create a new array of questions based on `nrQuestions`
-    const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
+    try {
+      const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
+      const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
+      const allQuestions = questionsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    // Save the new array into the "exams" collection
-    const newExam = {
-      questions: newQuestionsArray,
-      difficulty: difficulty.value || 'normal',
-      createdAt: new Date().toISOString(),
-    };
-    console.log(newExam)
-    newExam.questions = newExam.questions.map((preg) => {
-      const randomizedQuestion = {
-        ...preg,
-        problema: randomizeNumbers(preg.problema),
+      const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
+
+      const newExam = {
+        questions: newQuestionsArray,
+        difficulty: difficulty.value || 'normal',
+        createdAt: new Date().toISOString(),
       };
-      
-      if (randomizedQuestion.pregunta) {
-        randomizedQuestion.pregunta = randomizeNumbers(randomizedQuestion.pregunta);
+
+      const convertToLatex = (texAnswer) =>  {
+        if (!texAnswer || !texAnswer.evaluated || !texAnswer.evaluated._data) {
+          throw new Error("El resultado no contiene datos válidos para convertir a LaTeX");
+        }
+        const matrixData = texAnswer.evaluated._data;
+
+        const latexMatrix = matrixData
+          .map((row) => row.join(" & ")) 
+          .join(" \\\\ ");
+
+        return `\\begin{bmatrix}\n${latexMatrix}\n\\end{bmatrix}`;
       }
 
-      if (preg.tipo === 'opcionmultiple' && preg.opciones) {
-        randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
-      }
+      newExam.questions = newExam.questions.map((preg) => {
+        const randomizedQuestion = {
+          ...preg,
+          problema: randomizeNumbers(preg.problema),
+        };
 
-      return randomizedQuestion;
-    });
+        if (preg.tipo === 'opcionmultiple') {
+          let texAnswer;
+          const matrix = evaluateTex(randomizedQuestion.problema);
+          console.log(matrix)
+          
+          if (matrix && matrix.evaluated && matrix.evaluated._data) {
+            // Determinante para preguntas 1 y 9
+            if (preg.id === 'pregunta1' || preg.id === 'pregunta9') {
+              texAnswer = String(det(matrix.evaluated._data));
+            } else if (preg.id === 'pregunta2' || preg.id === 'pregunta10') {
+              const transposedMatrix = {
+                evaluated: {
+                  _data: transpose(matrix.evaluated._data)
+                }
+              };
+              texAnswer = convertToLatex(transposedMatrix);
+            } else {
+              texAnswer = convertToLatex(matrix);
+            }
+          }
 
-    // guarda el nuevo examen y obtiene el id
-    const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
+          if (texAnswer !== undefined) {
+            let opciones = preg.opciones.map(randomizeNumbers);
+            const randomIndex = Math.floor(Math.random() * opciones.length);
+            opciones[randomIndex] = texAnswer;
+            randomizedQuestion.opciones = opciones;
+          } else {
+            randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
+          }
+        }
 
-    // Redirect to the new exam's view
-    router.push(`/exam/${newExamDoc.id}`);
-  } catch (error) {
-    console.error('Error al generar el examen:', error);
-    alert('Hubo un error al generar el examen. Por favor, intente nuevamente.');
-  } finally {
-    loading.value = false;
-  }
-};
+        return randomizedQuestion;
+      });
 
-const randomizeNumbers = (text) => {
-  return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
-};
+      const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
 
-const generateRandomNumber = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+      router.push(`/exam/${newExamDoc.id}`);
+    } catch (error) {
+      console.error('Error al generar el examen:', error);
+      alert('Hubo un error al generar el examen. Por favor, intente nuevamente.');
+    } finally {
+      loading.value = false;
+    }
+  };
 
-// Fetch exams when the component mounts
-onMounted(() => {
-  fetchExams();
-});
+  onMounted(async () => {
+    const examTypesSnapshot = await getDocs(collection(db, 'tiposExamenes'));
+    TiposExamenes.value = examTypesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
 </script>
-
-
-<style>
-body {
-  margin: 0;
-  background-color: #f8fafc;
-  font-family: Arial, sans-serif;
-}
-</style>
