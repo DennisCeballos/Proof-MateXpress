@@ -255,3 +255,10 @@
       </div>
     </div>
   </template>
+
+<style>
+  body {
+    margin: 0;
+    overflow: scroll; 
+  }
+</style>
