@@ -89,6 +89,9 @@ const difficulty = ref('');
 const router = useRouter();
 const loading = ref(false);
 
+const min = -25;
+const max = 100;
+
 // Fetch exam types from Firebase
 const fetchExams = async () => {
   try {
@@ -147,9 +150,25 @@ const generateExam = async () => {
       difficulty: difficulty.value || 'normal',
       createdAt: new Date().toISOString(),
     };
+    console.log(newExam)
+    newExam.questions = newExam.questions.map((preg) => {
+      const randomizedQuestion = {
+        ...preg,
+        problema: randomizeNumbers(preg.problema),
+      };
+      
+      if (randomizedQuestion.pregunta) {
+        randomizedQuestion.pregunta = randomizeNumbers(randomizedQuestion.pregunta);
+      }
 
-    
+      if (preg.tipo === 'opcionmultiple' && preg.opciones) {
+        randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
+      }
 
+      return randomizedQuestion;
+    });
+
+    // guarda el nuevo examen y obtiene el id
     const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
 
     // Redirect to the new exam's view
@@ -160,6 +179,14 @@ const generateExam = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const randomizeNumbers = (text) => {
+  return text.replace(/-?\d+/g, () => generateRandomNumber(min, max));
+};
+
+const generateRandomNumber = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
 // Fetch exams when the component mounts
