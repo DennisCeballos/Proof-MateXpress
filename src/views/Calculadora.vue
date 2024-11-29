@@ -216,7 +216,8 @@
               </div>
               <div>
                 <label class="block text-sm">Columnas:</label>
-                <input type="number" v-model.number="colsB" min="1" max="10"/>
+                <input type="number" v-model.number="colsB" min="1" max="10"
+                  class="w-20 p-1 border rounded" />
               </div>
             </div>
             <MatrixInput :rows="rowsB" :cols="colsB" label="Matriz B" @update:matrix="matrixB = $event" />
