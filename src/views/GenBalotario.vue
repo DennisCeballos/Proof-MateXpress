@@ -135,51 +135,12 @@ const selectExam = (examId) => {
 const generateExam = async () => {
   if (!selectedExam.value || !nrQuestions.value || isNaN(nrQuestions.value)) {
     alert('Por favor, seleccione un examen y proporcione un número válido de preguntas.');
-    alert(selectedExam.value + ' ' + nrQuestions.value + ' ' + isNaN(nrQuestions))
     return;
   }
 
   loading.value = true;
 
   try {
-    // Fetch questions from the selected exam type
-    const examDoc = doc(db, 'tiposExamenes', selectedExam.value);
-    const questionsSnapshot = await getDocs(collection(examDoc, 'questions'));
-    const allQuestions = questionsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Create a new array of questions based on `nrQuestions`
-    const newQuestionsArray = getRandomQuestions(allQuestions, parseInt(nrQuestions.value, 10));
-
-    // Save the new array into the "exams" collection
-    const newExam = {
-      questions: newQuestionsArray,
-      difficulty: difficulty.value || 'normal',
-      createdAt: new Date().toISOString(),
-    };
-    console.log(newExam)
-    newExam.questions = newExam.questions.map((preg) => {
-      const randomizedQuestion = {
-        ...preg,
-        problema: randomizeNumbers(preg.problema),
-      };
-      
-      if (randomizedQuestion.pregunta) {
-        randomizedQuestion.pregunta = randomizeNumbers(randomizedQuestion.pregunta);
-      }
-
-      if (preg.tipo === 'opcionmultiple' && preg.opciones) {
-        randomizedQuestion.opciones = preg.opciones.map(randomizeNumbers);
-      }
-
-      return randomizedQuestion;
-    });
-
-    // guarda el nuevo examen y obtiene el id
-    const newExamDoc = await addDoc(collection(db, 'exams'), newExam);
-
     // Redirect to the new exam's view
     router.push({
       path: '/practicar',
